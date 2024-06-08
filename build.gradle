@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'fr.iban'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "papermc-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/groups/public/"
+    }
+
+//    maven { url "https://repo.dmulloy2.net/repository/public/" }
+    maven { url 'https://repo.codemc.io/repository/maven-releases/' }
+
+    maven { url = 'https://jitpack.io' }
+
+    mavenLocal()
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT"
+    implementation 'com.github.retrooper.packetevents:spigot:2.3.0'
+    implementation 'com.github.Revxrsal.Lamp:common:3.2.1'
+    implementation 'com.github.Revxrsal.Lamp:bukkit:3.2.1'
+    compileOnly "fr.iban:CorePaper:1.0"
+    compileOnly "fr.iban:CoreCommon:1.0"
+}
+
+shadowJar {
+    relocate 'com.github.retrooper.packetevents', 'fr.iban.velocityonepack.libs.packetevents.api'
+    relocate 'io.github.retrooper.packetevents', 'fr.iban.velocityonepack.libs.packetevents.impl'
+    relocate 'net.kyori', 'fr.iban.velocityonepack.libs.packetevents.kyori'
+    relocate 'com.github.Revxrsal.lamp', 'fr.iban.velocityonepack.libs.lamp'
+}
+
+
+def targetJavaVersion = 17
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
